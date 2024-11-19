@@ -119,7 +119,10 @@ class GHOST:
 
         response = self.session.get(url, headers=headers)
         if response.status_code == 200:
-            return response.json()
+            try:
+                return response.json()
+            except (requests.JSONDecodeError, ValueError) as e:
+                return None
         else:
             return None
         
@@ -210,29 +213,38 @@ class GHOST:
             count = 0
             while count < 20:
                 ads = self.get_ads(user_id)
-                trackings = ads["banner"]["trackings"]
-                urls = [tracking["value"] for tracking in trackings if tracking["name"] in ["render", "click", "reward"]]
-                for url in urls:
-                    if url:
-                        self.watch_ads(url)
-                        
-                count += 1
-                self.log(
-                    f"{Fore.MAGENTA + Style.BRIGHT}[ Task{Style.RESET_ALL}"
-                    f"{Fore.WHITE + Style.BRIGHT} Watch Short Video {Style.RESET_ALL}"
-                    f"{Fore.GREEN + Style.BRIGHT}Is Succes{Style.RESET_ALL}"
-                    f"{Fore.MAGENTA + Style.BRIGHT} ] [ Count{Style.RESET_ALL}"
-                    f"{Fore.WHITE + Style.BRIGHT} {count}/20 {Style.RESET_ALL}"
-                    f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
-                )
-                if count == 20:
+                if ads and "banner" in ads and "trackings" in ads["banner"]:
+                    trackings = ads["banner"]["trackings"]
+                    urls = [tracking["value"] for tracking in trackings if tracking["name"] in ["render", "click", "reward"]]
+                    for url in urls:
+                        if url:
+                            self.watch_ads(url)
+
+                    count += 1
                     self.log(
                         f"{Fore.MAGENTA + Style.BRIGHT}[ Task{Style.RESET_ALL}"
                         f"{Fore.WHITE + Style.BRIGHT} Watch Short Video {Style.RESET_ALL}"
-                        f"{Fore.GREEN + Style.BRIGHT}Is Completed{Style.RESET_ALL}"
-                        f"{Fore.MAGENTA + Style.BRIGHT} ] [ Reward{Style.RESET_ALL}"
-                        f"{Fore.WHITE + Style.BRIGHT} 5000 $GHOST {Style.RESET_ALL}"
+                        f"{Fore.GREEN + Style.BRIGHT}Is Succes{Style.RESET_ALL}"
+                        f"{Fore.MAGENTA + Style.BRIGHT} ] [ Count{Style.RESET_ALL}"
+                        f"{Fore.WHITE + Style.BRIGHT} {count}/20 {Style.RESET_ALL}"
                         f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
+                    )
+                    if count == 20:
+                        self.log(
+                            f"{Fore.MAGENTA + Style.BRIGHT}[ Task{Style.RESET_ALL}"
+                            f"{Fore.WHITE + Style.BRIGHT} Watch Short Video {Style.RESET_ALL}"
+                            f"{Fore.GREEN + Style.BRIGHT}Is Completed{Style.RESET_ALL}"
+                            f"{Fore.MAGENTA + Style.BRIGHT} ] [ Reward{Style.RESET_ALL}"
+                            f"{Fore.WHITE + Style.BRIGHT} 5000 $GHOST {Style.RESET_ALL}"
+                            f"{Fore.MAGENTA + Style.BRIGHT}]{Style.RESET_ALL}"
+                        )
+                        break
+                else:
+                    self.log(
+                        f"{Fore.MAGENTA + Style.BRIGHT}[ Task{Style.RESET_ALL}"
+                        f"{Fore.WHITE + Style.BRIGHT} Watch Short Video {Style.RESET_ALL}"
+                        f"{Fore.YELLOW + Style.BRIGHT}No Ads Found{Style.RESET_ALL}"
+                        f"{Fore.MAGENTA + Style.BRIGHT} ]{Style.RESET_ALL}"
                     )
                     break
 
